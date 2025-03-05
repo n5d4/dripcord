@@ -1,1 +1,1 @@
-web: dripcord
+worker: dripcord

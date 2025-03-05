@@ -22,7 +22,6 @@ func Load() *Config {
 	return &Config{
 		DiscordBotToken: os.Getenv("DISCORD_BOT_TOKEN"),
 		GeminiToken:     os.Getenv("GEMINI_TOKEN"),
-		GeminiUrl:       os.Getenv("GEMINI_URL"),
 		DiscordChannel:  os.Getenv("DISCORD_CHANNEL"),
 	}
 }
