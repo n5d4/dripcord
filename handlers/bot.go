@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
+	"time"
 )
 
 type Bot struct {
@@ -41,6 +42,18 @@ func (b *Bot) Run() {
 	}
 
 	fmt.Println("Bot is running...")
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute) // Change interval as needed
+		defer ticker.Stop()
+
+		for range ticker.C {
+			_, err := b.Session.ChannelMessageSend("233418632388935683", "Scheduled message: I'm still alive!")
+			if err != nil {
+				log.Println("Error sending scheduled message:", err)
+			}
+		}
+	}()
 
 	select {} // runs the bot indefinitely
 }
