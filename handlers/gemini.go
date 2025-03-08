@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 	"log"
 )
 
-func Translate(message string, token string) string {
+func Drip(message, token string) (string, error) {
 	ctx := context.Background()
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(token))
@@ -66,12 +67,15 @@ func Translate(message string, token string) string {
 	return parseResponse(resp)
 }
 
-func parseResponse(resp *genai.GenerateContentResponse) string {
+func parseResponse(resp *genai.GenerateContentResponse) (string, error) {
 	for _, cand := range resp.Candidates {
 		if cand.Content != nil && len(cand.Content.Parts) > 0 {
-			part := cand.Content.Parts[0]
-			return string(part.(genai.Text))
+			part, ok := cand.Content.Parts[0].(genai.Text)
+			if ok {
+				return string(part), nil
+			}
+			return "", fmt.Errorf("unexpected content type")
 		}
 	}
-	return "Translation failed, bro 💀"
+	return "", fmt.Errorf("drip failed, bro 💀")
 }

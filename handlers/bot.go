@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
-	"time"
 )
 
 type Bot struct {
@@ -21,17 +20,48 @@ func NewBot(cfg *config.Config) (*Bot, error) {
 
 	bot := &Bot{Session: s, Config: cfg}
 	s.AddHandler(bot.SendMessage)
-	s.Identify.Intents = discordgo.IntentsGuildMessages
+	s.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages
+
 	return bot, nil
 }
 
 func (b *Bot) SendMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID || m.ChannelID != b.Config.DiscordChannel {
+	if m.Author.ID == s.State.User.ID {
+		fmt.Println(m.Author.Username + ": " + m.Content)
 		return
 	}
 
-	translatedText := Translate(m.Content, b.Config.GeminiToken)
-	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf(translatedText))
+	channel, err := s.Channel(m.ChannelID)
+	if err != nil {
+		fmt.Println("Error getting channel info:", err)
+		return
+	}
+
+	if channel.Type == discordgo.ChannelTypeDM || m.ChannelID == b.Config.DiscordChannel {
+
+		fmt.Println(m.Author.Username + ": " + m.Content)
+
+		translatedText, err := Drip(m.Content, b.Config.GeminiToken)
+		if err != nil {
+			fmt.Println("failed to process message:", err)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, translatedText)
+		}
+	}
+}
+
+func (b *Bot) SendDM(userID, message string) error {
+	channel, err := b.Session.UserChannelCreate(userID)
+	if err != nil {
+		return fmt.Errorf("failed to create DM channel: %v", err)
+	}
+
+	_, err = b.Session.ChannelMessageSend(channel.ID, message)
+	if err != nil {
+		return fmt.Errorf("failed to send DM: %v", err)
+	}
+
+	return nil
 }
 
 func (b *Bot) Run() {
@@ -42,18 +72,6 @@ func (b *Bot) Run() {
 	}
 
 	fmt.Println("Bot is running...")
-
-	go func() {
-		ticker := time.NewTicker(time.Minute)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			_, err := b.Session.ChannelMessageSend("233418632388935683", "Scheduled message: I'm still alive!")
-			if err != nil {
-				log.Println("Error sending scheduled message:", err)
-			}
-		}
-	}()
 
 	select {} // runs the bot indefinitely
 }

@@ -10,7 +10,6 @@ type Config struct {
 	DiscordBotToken string
 	GeminiToken     string
 	DiscordChannel  string
-	GeminiUrl       string
 }
 
 func Load() *Config {
