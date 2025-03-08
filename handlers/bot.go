@@ -44,7 +44,7 @@ func (b *Bot) Run() {
 	fmt.Println("Bot is running...")
 
 	go func() {
-		ticker := time.NewTicker(10 * time.Minute) // Change interval as needed
+		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 
 		for range ticker.C {
