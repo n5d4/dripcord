@@ -17,7 +17,7 @@ func Drip(message, token string) (string, error) {
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("gemini-2.5-flash")
 	model.SetTemperature(0.9)
 
 	instructions := `
